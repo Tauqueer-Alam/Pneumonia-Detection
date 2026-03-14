@@ -7,10 +7,23 @@ from PIL import Image
 
 @st.cache_resource
 def load_pneumonia_model():
-    model_path = 'pneumonia_model_custom.h5'
-    if os.path.exists(model_path):
-        # compile=False avoids errors when deserializing optimizers/metrics on deployment
-        return tf.keras.models.load_model(model_path, compile=False)
+    weights_path = 'pneumonia_model_weights.weights.h5'
+    if os.path.exists(weights_path):
+        model = tf.keras.models.Sequential([
+            tf.keras.Input(shape=(180, 180, 3)),
+            tf.keras.layers.Rescaling(1./255),
+            tf.keras.layers.Conv2D(16, 3, padding="same", activation="relu"),
+            tf.keras.layers.MaxPooling2D(),
+            tf.keras.layers.Conv2D(32, 3, padding="same", activation="relu"),
+            tf.keras.layers.MaxPooling2D(),
+            tf.keras.layers.Conv2D(64, 3, padding="same", activation="relu"),
+            tf.keras.layers.MaxPooling2D(),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.Dense(2, activation="softmax")
+        ])
+        model.load_weights(weights_path)
+        return model
     else:
         return None
 
@@ -43,17 +56,17 @@ st.write("Upload a chest X-ray image or choose a sample to detect whether it sho
 model = load_pneumonia_model()
 
 if model is None:
-    st.warning("Model not found. Please run `train_model.py` first to train the model and generate `pneumonia_model_custom.h5`.")
+    st.warning("Model not found. Please run `train_model.py` first to train the model and generate `pneumonia_model_weights.weights.h5`.")
 
 st.markdown("### Test with Sample Images")
 st.write("Click on any sample image below to see how the model predicts it.")
 
-# Hardcoding sample paths from the test directory
+# Hardcoding sample paths from the separate sample directory
 sample_images = [
-    {"path": os.path.join("chest_xray", "test", "NORMAL", "NORMAL-1049278-0001.jpeg"), "label": "Normal Sample"},
-    {"path": os.path.join("chest_xray", "test", "NORMAL", "NORMAL-11419-0001.jpeg"), "label": "Normal Sample"},
-    {"path": os.path.join("chest_xray", "test", "PNEUMONIA", "BACTERIA-1135262-0001.jpeg"), "label": "Pneumonia Sample"},
-    {"path": os.path.join("chest_xray", "test", "PNEUMONIA", "VIRUS-1056329-0001.jpeg"), "label": "Pneumonia Sample"}
+    {"path": "sample_images/NORMAL-1049278-0001.jpeg", "label": "Normal Sample"},
+    {"path": "sample_images/NORMAL-11419-0001.jpeg", "label": "Normal Sample"},
+    {"path": "sample_images/BACTERIA-1135262-0001.jpeg", "label": "Pneumonia Sample"},
+    {"path": "sample_images/VIRUS-1056329-0001.jpeg", "label": "Pneumonia Sample"}
 ]
 
 cols = st.columns(4)
