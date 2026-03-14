@@ -9,7 +9,8 @@ from PIL import Image
 def load_pneumonia_model():
     model_path = 'pneumonia_model_custom.keras'
     if os.path.exists(model_path):
-        return tf.keras.models.load_model(model_path)
+        # compile=False avoids errors when deserializing optimizers/metrics on deployment
+        return tf.keras.models.load_model(model_path, compile=False)
     else:
         return None
 
