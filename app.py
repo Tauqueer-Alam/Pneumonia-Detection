@@ -7,9 +7,10 @@ from PIL import Image
 
 @st.cache_resource
 def load_pneumonia_model():
-    model_path = 'pneumonia_model_custom.keras'
+    model_path = 'pneumonia_model_custom.h5'
     if os.path.exists(model_path):
-        return tf.keras.models.load_model(model_path)
+        # compile=False avoids errors when deserializing optimizers/metrics on deployment
+        return tf.keras.models.load_model(model_path, compile=False)
     else:
         return None
 
@@ -42,7 +43,7 @@ st.write("Upload a chest X-ray image or choose a sample to detect whether it sho
 model = load_pneumonia_model()
 
 if model is None:
-    st.warning("Model not found. Please run `train_model.py` first to train the model and generate `pneumonia_model_custom.keras`.")
+    st.warning("Model not found. Please run `train_model.py` first to train the model and generate `pneumonia_model_custom.h5`.")
 
 st.markdown("### Test with Sample Images")
 st.write("Click on any sample image below to see how the model predicts it.")
